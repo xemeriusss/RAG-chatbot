@@ -15,11 +15,14 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class Chatbot():
     def __init__(self):
-        loader = TextLoader('./challengers.txt')
+        
+        # Loading and Splitting Documents
+        loader = TextLoader('./Hayao_Miyazaki.txt')
         documents = loader.load()
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=4)
         docs = text_splitter.split_documents(documents)
 
+        # Setting Up Embeddings and Pinecone Index
         embeddings = HuggingFaceEmbeddings()
 
         pinecone_api_key = os.getenv('PINECONE')
@@ -38,6 +41,7 @@ class Chatbot():
             # Link to the existing index
             self.docsearch = Pinecone.from_existing_index(index_name, embeddings)
 
+        # Connecting to Hugging Face Model
         hf_key = os.getenv('HF_KEY')
 
         # Define the repo ID and connect to Mixtral model on Huggingface
@@ -50,8 +54,9 @@ class Chatbot():
             huggingfacehub_api_token=hf_key
         )
 
+        # Prompt Template Setup
         template = """
-        The Human will ask questions about Challengers movie in 2024. 
+        The Human will ask questions about Hayao Miyazaki life. 
         If you don't know the answer, just say you don't know. 
         Keep the answer 3-4 sentences.
         
@@ -65,7 +70,9 @@ class Chatbot():
             input_variables=["context", "question"]
         )
 
-        # Setup for the retriever, question, prompt, LLM, and output parser
+        # Retriever: It takes your question, searches through all the stored information, 
+        # and picks out the most relevant pieces. These pieces are then used to 
+        # help generate a response to your question.
         self.retriever = self.docsearch.as_retriever()
 
     def get_response(self, question):
